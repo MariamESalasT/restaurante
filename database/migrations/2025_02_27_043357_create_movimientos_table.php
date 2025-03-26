@@ -16,8 +16,9 @@ return new class extends Migration
         $table->string('tipo', 50);
         $table->decimal('cantidad', 10, 2);
         $table->date('fecha');
-       # $table->foreignId('id_usuarios')->constrained('id');
-       # $table->foreignId('id_productos')->references('id')->on('productos');
+        $table->foreignId('id_usuarios')->constrained('usuarios');
+        $table->foreignId('id_productos')->constrained('productos');
+        
         $table->timestamps();
     });
 }

@@ -17,10 +17,8 @@ return new class extends Migration
             $table->decimal('stock_actual', 10, 2);
             $table->string('unidad_medida',20);
             $table->date('fecha_caducidad');
-            #$table->unsignedBigInteger('id_categorias'); 
-            #$table->unsignedBigInteger('id_proveedores'); 
-            #$table->foreignId('id_categorias')->references('id')->on('categorias');
-            #$table->foreignId('id_proveedores')->references('id')->on('proveedores');
+            $table->foreignId('id_categorias')->constrained('categorias');
+            $table->foreignId('id_proveedores')->constrained('proveedores');
             $table->timestamps();
         });
     }
