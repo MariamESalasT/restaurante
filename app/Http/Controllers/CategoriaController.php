@@ -64,8 +64,8 @@ class CategoriaController extends Controller
      */
     public function edit($id)
     {
-        // Si estás usando una vista, puedes devolverla para editar la categoría
-        // return view('categorias.edit', compact('categoria'));
+        $categoria = Categoria::findOrFail($id);
+        return view('categorias.editar', compact('categoria'));
     }
 
     /**
@@ -88,7 +88,7 @@ class CategoriaController extends Controller
             'descripcion' => $request->descripcion,
         ]);
 
-        return response()->json($categoria);
+        return redirect()->route('products.index')->with('success', 'Categoría actualizada correctamente');
     }
 
     /**

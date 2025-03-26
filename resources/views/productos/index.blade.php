@@ -95,7 +95,7 @@
         {{-- Formulario de nueva categoría --}}
         <div id="formCategoria" class="card p-3 mb-4" style="display: none;">
             <h3>Nueva Categoría</h3>
-            <form action="{{ route('categorias.store') }}" method="POST">
+            <form action="{{ route('categories.store') }}" method="POST">
                 @csrf
                 <div class="mb-3">
                     <label for="nombre" class="form-label">Nombre</label>
@@ -124,8 +124,8 @@
                         <td>{{ $categoria->nombre }}</td>
                         <td>{{ $categoria->descripcion }}</td>
                         <td>
-                            <a href="{{ route('categorias.edit', $categoria->id) }}" class="btn btn-warning btn-sm">Editar</a>
-                            <form action="{{ route('categorias.destroy', $categoria->id) }}" method="POST"
+                            <a href="{{ route('categories.edit', $categoria->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                            <form action="{{ route('categories.destroy', $categoria->id) }}" method="POST"
                                 style="display:inline;">
                                 @csrf
                                 @method('DELETE')
