@@ -6,6 +6,13 @@
     <div class="container">
         <h1>Gestión de Productos y Categorías</h1>
 
+        {{-- Mensajes de éxito o error --}}
+        @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
         {{-- Botón para agregar un nuevo producto --}}
         <button class="btn btn-primary my-3" onclick="mostrarFormularioProducto()">Agregar Producto</button>
 

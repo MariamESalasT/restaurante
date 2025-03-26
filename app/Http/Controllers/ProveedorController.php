@@ -13,7 +13,7 @@ class ProveedorController extends Controller
     public function index()
     {
         $proveedores = Proveedor::all();
-        return response()->json($proveedores);
+        return view('proveedores.index', compact('proveedores'));
     }
 
     /**
@@ -44,7 +44,7 @@ class ProveedorController extends Controller
             'telefono' => $request->telefono,
         ]);
 
-        return response()->json($proveedor, 201);
+        return redirect()->route('providers.index')->with('success', 'Proveedor creado correctamente');
     }
 
     /**
@@ -61,7 +61,9 @@ class ProveedorController extends Controller
      */
     public function edit($id)
     {
-        // Aquí puedes devolver una vista para editar si es necesario
+        // Buscar el producto por su ID
+        $provider = Proveedor::findOrFail($id);
+        return view('proveedores.editar', compact('provider'));
     }
 
     /**
@@ -85,7 +87,7 @@ class ProveedorController extends Controller
             'telefono' => $request->telefono,
         ]);
 
-        return response()->json($proveedor);
+        return redirect()->route('providers.index')->with('success', 'Proveedor actualizado correctamente');
     }
 
     /**
@@ -96,6 +98,6 @@ class ProveedorController extends Controller
         $proveedor = Proveedor::findOrFail($id);
         $proveedor->delete();
 
-        return response()->json(['message' => 'Proveedor eliminado correctamente']);
+        return redirect()->route('providers.index')->with('success', 'Proveedor eliminado correctamente');
     }
 }
