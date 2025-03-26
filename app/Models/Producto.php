@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Productos extends Model
+class Producto extends Model
 {
     use HasFactory;
 
@@ -18,7 +18,8 @@ class Productos extends Model
         'stock_actual',
         'unidad_medida',
         'fecha_caducidad',
-        // Aquí irían 'id_categorias' y 'id_proveedores' si se descomentan las claves foráneas
+        'id_categorias',
+        'id_proveedores',
     ];
 
     // Definir relaciones con otros modelos, si las claves foráneas están habilitadas en la migración

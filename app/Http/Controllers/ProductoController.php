@@ -7,7 +7,7 @@ use App\Models\Categoria;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
 
-class ProductosController extends Controller
+class ProductoController extends Controller
 {
     /**
      * Mostrar una lista de los productos.
@@ -17,8 +17,8 @@ class ProductosController extends Controller
         // Obtener todos los productos con sus relaciones
         $productos = Producto::with(['categoria', 'proveedor'])->get();
         $categorias = Categoria::all(); // Obtener todas las categorías para el select
-
-        return view('products', compact('productos', 'categorias')); 
+        $proveedores = Proveedor::all(); // Obtener todos los proveedores para el select
+        return view('productos.index', compact('productos', 'categorias', 'proveedores'));
     }
 
 
@@ -28,7 +28,7 @@ class ProductosController extends Controller
     public function create()
     {
         // Si usas vistas, puedes retornar una vista para mostrar el formulario
-        return view('products');
+        return redirect()->route('products.index');
 
         // Para una API, generalmente no es necesario un formulario, ya que
         // se trabajaría con peticiones JSON.
@@ -39,6 +39,7 @@ class ProductosController extends Controller
      */
     public function store(Request $request)
     {
+
         // Validar los datos recibidos
         $request->validate([
             'nombre' => 'required|max:100',
@@ -48,6 +49,7 @@ class ProductosController extends Controller
             'id_categorias' => 'required|exists:categorias,id',
             'id_proveedores' => 'required|exists:proveedores,id',
         ]);
+
 
         // Crear el producto en la base de datos
         $producto = Producto::create([
@@ -59,7 +61,7 @@ class ProductosController extends Controller
             'id_proveedores' => $request->id_proveedores,
         ]);
 
-        return response()->json($producto, 201);
+        return redirect()->route('products.index')->with('success', 'Producto creado correctamente');
     }
 
     /**
@@ -77,8 +79,13 @@ class ProductosController extends Controller
      */
     public function edit($id)
     {
-        // Si estás usando una vista, puedes devolverla para editar el producto
-        // return view('productos.edit', compact('producto'));
+        // Buscar el producto por su ID
+        $producto = Producto::with(['categoria', 'proveedor'])->findOrFail($id);
+        $categorias = Categoria::all(); // Obtener todas las categorías para el select
+        $proveedores = Proveedor::all(); // Obtener todos los proveedores para el select
+
+        // Retornar la vista con el producto, las categorías y proveedores
+        return view('productos.editar', compact('producto', 'categorias', 'proveedores'));
     }
 
     /**
@@ -109,7 +116,7 @@ class ProductosController extends Controller
             'id_proveedores' => $request->id_proveedores,
         ]);
 
-        return response()->json($producto);
+        return redirect()->route('products.index')->with('success', 'Producto actualizado correctamente');
     }
 
     /**
@@ -121,6 +128,6 @@ class ProductosController extends Controller
         $producto = Producto::findOrFail($id);
         $producto->delete();
 
-        return response()->json(['message' => 'Producto eliminado correctamente']);
+        return redirect()->route('products.index')->with('success', 'Producto actualizado correctamente');
     }
 }

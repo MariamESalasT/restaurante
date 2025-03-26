@@ -13,12 +13,16 @@ return new class extends Migration
     {
         Schema::create('productos', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre',100);
+            $table->string('nombre', 100);
             $table->decimal('stock_actual', 10, 2);
-            $table->string('unidad_medida',20);
+            $table->string('unidad_medida', 20);
             $table->date('fecha_caducidad');
-            $table->foreignId('id_categorias')->constrained('categorias');
-            $table->foreignId('id_proveedores')->constrained('proveedores');
+            $table->unsignedBigInteger('id_categorias');
+            $table->unsignedBigInteger('id_proveedores'); // Si también tienes una relación con proveedores
+
+            // Definir las claves foráneas
+            $table->foreign('id_categorias')->references('id')->on('categorias')->onDelete('cascade');
+            $table->foreign('id_proveedores')->references('id')->on('proveedores')->onDelete('cascade');
             $table->timestamps();
         });
     }
