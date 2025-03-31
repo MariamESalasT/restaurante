@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->string('ap_paterno',50);
-            $table->string('ap_materno',50);
+            $table->string('ap_materno',50)->nullable;
             $table->string('rol',20);
             $table->string('email',100)->unique();
-            $table->string('password',50);
+            $table->string('password',255);
             $table->timestamps();
         });
     }
