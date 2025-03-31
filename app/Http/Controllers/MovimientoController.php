@@ -4,80 +4,79 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Movimiento;
-use App\Models\User;
 use App\Models\Producto;
 
 class MovimientoController extends Controller
 {
-    /**
-     * Muestra todos los movimientos.
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $movimientos = Movimiento::with(['usuario', 'producto'])->get();
-        return response()->json($movimientos);
+        $query = Movimiento::with('producto');
+
+        if ($request->filled('producto')) {
+            $query->whereHas('producto', function ($q) use ($request) {
+                $q->where('nombre', 'like', '%' . $request->producto . '%');
+            });
+        }
+
+        if ($request->filled('tipo')) {
+            $query->where('tipo', $request->tipo);
+        }
+
+        $movimientos = $query->get();
+        $productos = Producto::all();
+
+        return view('inventario.index', compact('movimientos', 'productos'))
+            ->with('message', $movimientos->isEmpty() ? 'No se encontraron movimientos.' : null);
     }
 
-    /**
-     * Guarda un nuevo movimiento en la base de datos.
-     */
     public function store(Request $request)
     {
         $request->validate([
-            'tipo' => 'required|string|max:50',
-            'cantidad' => 'required|numeric|min:0',
-            'fecha' => 'required|date',
-            'id_usuarios' => 'required|exists:usuarios,id',
-            'id_productos' => 'required|exists:productos,id'
+            'producto_nombre' => 'required|string',
+            'cantidad' => 'required|numeric|min:1',
+            'unidad_medida' => 'required|string|max:20',
+            'tipo' => 'required|in:entrada,salida',
         ]);
 
-        $movimiento = Movimiento::create($request->all());
+        $producto = Producto::whereRaw('LOWER(nombre) = ?', [strtolower($request->producto_nombre)])->first();
 
-        return response()->json([
-            'message' => 'Movimiento registrado con éxito',
-            'data' => $movimiento
-        ], 201);
-    }
+        if (!$producto) {
+            $producto = Producto::create([
+                'nombre' => $request->producto_nombre,
+                'stock_actual' => 0,
+                'unidad_medida' => $request->unidad_medida,
+                'fecha_caducidad' => now()->addMonths(6)->toDateString(),
+                'id_categorias' => 1,
+                'id_proveedores' => 1
+            ]);
+        }
 
-    /**
-     * Muestra un movimiento específico.
-     */
-    public function show($id)
-    {
-        $movimiento = Movimiento::with(['usuario', 'producto'])->findOrFail($id);
-        return response()->json($movimiento);
-    }
+        if ($request->tipo == 'entrada') {
+            $producto->stock_actual += $request->cantidad;
+            $producto->save();
+        } else {
+            if ($request->cantidad > $producto->stock_actual) {
+                return back()->with('error', 'No hay suficiente stock para la salida.');
+            }
 
-    /**
-     * Actualiza un movimiento existente.
-     */
-    public function update(Request $request, $id)
-    {
-        $request->validate([
-            'tipo' => 'string|max:50',
-            'cantidad' => 'numeric|min:0',
-            'fecha' => 'date',
-            'id_usuarios' => 'exists:usuarios,id',
-            'id_productos' => 'exists:productos,id'
+            if ($request->cantidad == $producto->stock_actual) {
+                $producto->delete();
+                session()->flash('message', 'Producto eliminado porque el stock llegó a 0.');
+            } else {
+                $producto->stock_actual -= $request->cantidad;
+                $producto->save();
+            }
+        }
+
+        Movimiento::create([
+            'tipo' => $request->tipo,
+            'cantidad' => $request->cantidad,
+            'fecha' => now(),
+            'id_productos' => $producto->id,
         ]);
 
-        $movimiento = Movimiento::findOrFail($id);
-        $movimiento->update($request->all());
-
-        return response()->json([
-            'message' => 'Movimiento actualizado con éxito',
-            'data' => $movimiento
-        ]);
-    }
-
-    /**
-     * Elimina un movimiento.
-     */
-    public function destroy($id)
-    {
-        $movimiento = Movimiento::findOrFail($id);
-        $movimiento->delete();
-
-        return response()->json(['message' => 'Movimiento eliminado con éxito']);
+        return redirect()->route('inventario.index')->with('success', 'Movimiento registrado correctamente.');
     }
 }
+
+
