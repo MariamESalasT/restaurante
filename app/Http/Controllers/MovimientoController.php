@@ -10,24 +10,26 @@ class MovimientoController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Movimiento::with('producto');
+        $query = Movimiento::query();
 
-        if ($request->filled('producto')) {
+        // Filtro por tipo de movimiento
+        if ($request->has('tipo') && in_array($request->tipo, ['insertar', 'actualizar', 'eliminar'])) {
+            $query->where('tipo', $request->tipo);
+        }
+
+        // Otros filtros (por producto)
+        if ($request->has('producto') && $request->producto != '') {
             $query->whereHas('producto', function ($q) use ($request) {
                 $q->where('nombre', 'like', '%' . $request->producto . '%');
             });
         }
 
-        if ($request->filled('tipo')) {
-            $query->where('tipo', $request->tipo);
-        }
+        // Obtener los movimientos con los filtros aplicados
+        $movimientos = $query->with('producto')->get();
 
-        $movimientos = $query->get();
-        $productos = Producto::all();
-
-        return view('inventario.index', compact('movimientos', 'productos'))
-            ->with('message', $movimientos->isEmpty() ? 'No se encontraron movimientos.' : null);
+        return view('inventario.index', compact('movimientos'));
     }
+
 
     public function store(Request $request)
     {
