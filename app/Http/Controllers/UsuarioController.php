@@ -8,18 +8,12 @@ use Illuminate\Support\Facades\Hash;
 
 class UsuarioController extends Controller
 {
-    /**
-     * Mostrar la lista de usuarios.
-     */
     public function index()
     {
         $usuarios = User::all();
-        return response()->json($usuarios);
+        return view('usuarios.index', compact('usuarios'));
     }
 
-    /**
-     * Guardar un nuevo usuario.
-     */
     public function store(Request $request)
     {
         $request->validate([
@@ -40,63 +34,78 @@ class UsuarioController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        return response()->json(['message' => 'Usuario creado con éxito', 'usuario' => $usuario], 201);
+        return redirect()->route('usuarios.index')->with('success', 'Usuario creado con éxito');
     }
 
-    /**
-     * Mostrar un usuario específico.
-     */
-    public function show($id)
-    {
-        $usuario = User::find($id);
-        if (!$usuario) {
-            return response()->json(['message' => 'Usuario no encontrado'], 404);
-        }
-        return response()->json($usuario);
-    }
-
-    /**
-     * Actualizar un usuario existente.
-     */
     public function update(Request $request, $id)
-    {
-        $usuario = User::find($id);
-        if (!$usuario) {
-            return response()->json(['message' => 'Usuario no encontrado'], 404);
-        }
+        {
+            $usuario = User::find($id);
 
-        $request->validate([
-            'nombre' => 'sometimes|string|max:100',
-            'ap_paterno' => 'sometimes|string|max:50',
-            'ap_materno' => 'nullable|string|max:50',
-            'rol' => 'sometimes|string|max:20',
-            'email' => 'sometimes|string|email|max:100|unique:usuarios,email,' . $id,
-            'password' => 'nullable|string|min:8',
-        ]);
+            if (!$usuario) {
+                return redirect()->route('usuarios.index')->with('error', 'Usuario no encontrado');
+            }
 
-        $usuario->update([
-            'nombre' => $request->nombre ?? $usuario->nombre,
-            'ap_paterno' => $request->ap_paterno ?? $usuario->ap_paterno,
-            'ap_materno' => $request->ap_materno ?? $usuario->ap_materno,
-            'rol' => $request->rol ?? $usuario->rol,
-            'email' => $request->email ?? $usuario->email,
-            'password' => $request->password ? Hash::make($request->password) : $usuario->password,
-        ]);
+            $request->validate([
+                'nombre' => 'required|string|max:100',
+                'ap_paterno' => 'required|string|max:50',
+                'ap_materno' => 'nullable|string|max:50',
+                'rol' => 'required|string|in:admin,proveedor,cocinero',
+                'email' => 'required|string|email|max:100|unique:usuarios,email,' . $id,
+                'password' => 'nullable|string|min:8|confirmed', // Contraseña opcional y validación de confirmación
+            ]);
 
-        return response()->json(['message' => 'Usuario actualizado con éxito', 'usuario' => $usuario]);
-    }
+            // Actualizamos los campos del usuario
+            $usuario->nombre = $request->nombre;
+            $usuario->ap_paterno = $request->ap_paterno;
+            $usuario->ap_materno = $request->ap_materno;
+            $usuario->rol = $request->rol;
+            $usuario->email = $request->email;
 
-    /**
-     * Eliminar un usuario.
-     */
+            // Si la contraseña es proporcionada, se actualiza
+            if ($request->password) {
+                $usuario->password = Hash::make($request->password);
+            }
+
+            // Guardamos los cambios
+            $usuario->save();
+
+    return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado con éxito');
+}
+
     public function destroy($id)
     {
         $usuario = User::find($id);
+
         if (!$usuario) {
-            return response()->json(['message' => 'Usuario no encontrado'], 404);
+            return redirect()->route('usuarios.index')->with('error', 'Usuario no encontrado');
         }
 
         $usuario->delete();
-        return response()->json(['message' => 'Usuario eliminado con éxito']);
+        return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado con éxito');
     }
+
+    public function show($id)
+    {   
+        $usuario = User::find($id); // Buscar el usuario por su ID
+        if (!$usuario) {
+            return redirect()->route('usuarios.index')->with('error', 'Usuario no encontrado.');
+    }
+         return view('usuarios.show', compact('usuario')); // Retornar la vista con el usuario encontrado
+    }
+
+    public function edit($id)
+    {
+        $usuario = User::find($id); // Buscar el usuario por su ID
+        if (!$usuario) {
+            return redirect()->route('usuarios.index')->with('error', 'Usuario no encontrado.');
+        }
+        return view('usuarios.edit', compact('usuario')); // Retornar la vista de edición con los datos del usuario
+    }
+
+    public function create()
+    {
+        return view('usuarios.create'); 
+    }
+
+
 }
